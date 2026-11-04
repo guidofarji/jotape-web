@@ -1,16 +1,19 @@
-<!doctype html><html lang="es"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/><meta name="theme-color" content="#061108"/><title>JOTAPE — Gemini Live 5.0</title></head><body>
-<main class="terminal">
-  <div class="windowbar"><span>_</span><span>□</span><span>×</span></div>
-  <header><div><h1>JOTAPE</h1><small>TERMINAL CONVERSACIONAL · SISTEMA 2026</small></div><small class="status"><i id="dot"></i><span id="connection">DESCONECTADO</span></small></header>
-  <section class="hero">
-   <div class="stage"><div class="float" id="floating"><div class="halo"></div><img id="robot" src="/sprites/jotape_turn_05.png" alt="JOTAPE, robot digital con ojos rojos y boca CRT"/><img id="blink" src="/sprites/jotape_blink_dim.png" alt="" aria-hidden="true"/><div id="mouthglow"></div></div></div>
-   <p class="phase" id="phase">ACERCATE AL TERMINAL. TENEMOS QUE HABLAR.</p>
-   <div id="reply" class="speech">&gt; SOY JOTAPE. ¿CÓMO ANDAMOS?</div>
-  </section>
-  <footer>
-    <div class="actions"><button id="connect">INICIAR CONEXIÓN</button><button id="disconnect" hidden>CERRAR SESIÓN</button><button id="mute" hidden>MICRÓFONO: ACTIVADO</button></div>
-    <div class="inputrow" id="textrow" hidden><input id="text" placeholder="También podés escribir..."/><button id="send">ENVIAR</button></div>
-    <div class="helper">JOTAPE // GEMINI LIVE // SESIÓN DE VOZ // NO GUARDAMOS AUDIO EN EL SERVIDOR</div>
-    <div id="err" role="alert"></div>
-  </footer>
+<!doctype html><html lang="es"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/><meta name="theme-color" content="#060d0c"/><title>JOTAPE — Terminal Retro 5.2</title></head><body>
+<main class="console" aria-label="Terminal conversacional JOTAPE">
+ <section class="console-body">
+  <aside class="side left-panel" aria-label="Sistema de voz">
+   <div class="brand-plate"><span class="logo">JOTAPE</span><span class="brand-sub">TERMINAL<br>CONVERSACIONAL<br>SISTEMA 2026</span></div>
+   <div class="eq-box"><div class="eq-bars" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div><span class="plate-caption">VOICE SCAN</span></div>
+  </aside>
+  <div class="screen-housing"><div class="screen">
+   <header class="screen-header"><div class="mobile-heading"><h1>JOTAPE</h1><small>TERMINAL CONVERSACIONAL<br>SISTEMA 2026</small></div><small class="mobile-status"><i id="dot"></i><span id="connection">DESCONECTADO</span></small></header>
+   <div class="stage"><div class="float" id="floating"><div class="halo"></div><img id="robot" src="/sprites/jotape_turn_05.png" alt="JOTAPE: robot retro con ojos rojos y boca CRT"/><img id="blink" src="/sprites/jotape_blink_dim.png" alt="" aria-hidden="true"/><div id="mouthglow"></div></div></div>
+   <div class="mobile-eq" aria-hidden="true"><div class="eq-bars"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div></div>
+   <div class="phase" id="phase">ACERCATE AL TERMINAL. TENEMOS QUE HABLAR.</div><div id="reply" class="speech">&gt; SOY JOTAPE. ¿CÓMO ANDAMOS?</div>
+  </div></div>
+  <aside class="side right-panel" aria-label="Estado de conexión"><div class="state-box"><div class="plate-caption">ESTADO</div><div class="status-line"><i class="light"></i><span id="desktop-connection">LISTO PARA CONECTAR</span></div></div><div class="speaker" aria-hidden="true"></div></aside>
+ </section>
+ <section class="console-controls"><div class="bottom-plate">JOTAPE <span>·</span> UNIDAD DE CONVERSACIÓN</div><div class="control-deck"><div class="knob" aria-hidden="true"></div>
+ <div class="action-zone"><div class="actions"><button id="connect">INICIAR CONEXIÓN</button><button id="disconnect" hidden>CERRAR SESIÓN</button><button id="mute" hidden>MICRÓFONO: ACTIVADO</button></div><div class="inputrow" id="textrow" hidden><input id="text" aria-label="Mensaje para JOTAPE" placeholder="Escribí tu mensaje..."/><button id="send">ENVIAR</button></div><div id="err" role="alert" aria-live="polite"></div></div><div class="knob" aria-hidden="true"></div></div></section>
+ <div class="helper">JOTAPE // GEMINI LIVE // SESIÓN DE VOZ // AUDIO NO GUARDADO EN EL SERVIDOR</div>
 </main><script type="module" src="/src/main.js"></script></body></html>
