@@ -1,0 +1,16 @@
+<!doctype html><html lang="es"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/><meta name="theme-color" content="#061108"/><title>JOTAPE — Gemini Live 5.0</title></head><body>
+<main class="terminal">
+  <div class="windowbar"><span>_</span><span>□</span><span>×</span></div>
+  <header><div><h1>JOTAPE</h1><small>TERMINAL CONVERSACIONAL · SISTEMA 2026</small></div><small class="status"><i id="dot"></i><span id="connection">DESCONECTADO</span></small></header>
+  <section class="hero">
+   <div class="stage"><div class="float" id="floating"><div class="halo"></div><img id="robot" src="/sprites/jotape_turn_05.png" alt="JOTAPE, robot digital con ojos rojos y boca CRT"/><img id="blink" src="/sprites/jotape_blink_dim.png" alt="" aria-hidden="true"/><div id="mouthglow"></div></div></div>
+   <p class="phase" id="phase">ACERCATE AL TERMINAL. TENEMOS QUE HABLAR.</p>
+   <div id="reply" class="speech">&gt; SOY JOTAPE. ¿CÓMO ANDAMOS?</div>
+  </section>
+  <footer>
+    <div class="actions"><button id="connect">INICIAR CONEXIÓN</button><button id="disconnect" hidden>CERRAR SESIÓN</button><button id="mute" hidden>MICRÓFONO: ACTIVADO</button></div>
+    <div class="inputrow" id="textrow" hidden><input id="text" placeholder="También podés escribir..."/><button id="send">ENVIAR</button></div>
+    <div class="helper">JOTAPE // GEMINI LIVE // SESIÓN DE VOZ // NO GUARDAMOS AUDIO EN EL SERVIDOR</div>
+    <div id="err" role="alert"></div>
+  </footer>
+</main><script type="module" src="/src/main.js"></script></body></html>
