@@ -79,13 +79,13 @@ function scheduleBlink(){
  const generation=blinkGeneration;
  blinkTimer=setTimeout(async()=>{
   if(active&&generation===blinkGeneration&&!turning&&position===5){
-   blink.src='/sprites/jotape_blink_dim.png';blink.style.opacity='.85';
+   blink.src='/sprites/jotape_blink_dim.png';blink.style.opacity='.35';
    await frameDelay(90);
    if(!active||generation!==blinkGeneration)return;
-   blink.src='/sprites/jotape_blink_off.png';
+   blink.src='/sprites/jotape_blink_off.png';blink.style.opacity='1';
    await frameDelay(65);
    if(!active||generation!==blinkGeneration)return;
-   blink.src='/sprites/jotape_blink_dim.png';
+   blink.src='/sprites/jotape_blink_dim.png';blink.style.opacity='.35';
    await frameDelay(100);
    blink.style.opacity='0';
   }
