@@ -43,6 +43,11 @@ const rotationFrames=[5,6,7,8,9,8,7,6,5,4,3,2,1,2,3,4];
 const rotationIntervalMs=340; // Aumentar para girar más despacio.
 let rotationIndex=0;
 function animateHead(){
+ // Durante la reproducción de voz se mantiene la vista frontal.
+ if(audioSources.size>0){
+  robot.src=sprite(5);
+  return;
+ }
  rotationIndex=(rotationIndex+1)%rotationFrames.length;
  robot.src=sprite(rotationFrames[rotationIndex]);
 }
@@ -111,7 +116,12 @@ function playPCM(base64){
  for(let i=0;i<len;i++)dst[i]=view.getInt16(i*2,true)/32768;
  const src=outCtx.createBufferSource();src.buffer=buffer;src.connect(voiceAnalyser);
  const start=Math.max(outCtx.currentTime+.02,nextPlay);nextPlay=start+buffer.duration;
- src.onended=()=>audioSources.delete(src);audioSources.add(src);voiceActiveUntil=performance.now()+Math.max(1400,(nextPlay-outCtx.currentTime)*1000+250);src.start(start);
+ src.onended=()=>{audioSources.delete(src);};
+ audioSources.add(src);
+ // Apenas llega audio, la cabeza mira al frente hasta que termina de hablar.
+ robot.src=sprite(5);
+ rotationIndex=0;
+ src.start(start);
  message('JOTAPE ESTÁ HABLANDO...');
 }
 function trackVoice(){if(!active||!voiceAnalyser)return;const f=new Uint8Array(voiceAnalyser.frequencyBinCount);voiceAnalyser.getByteTimeDomainData(f);let power=0;for(const v of f){const d=(v-128)/128;power+=d*d}const rms=Math.sqrt(power/f.length);setMouth(Math.max(0,(rms-.009)*6));animFrame=requestAnimationFrame(trackVoice)}
