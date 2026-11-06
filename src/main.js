@@ -6,11 +6,40 @@ import './style.css';
 const $ = s => document.querySelector(s);
 const sprite = n => `/sprites/jotape_turn_${String(n).padStart(2,'0')}.png`;
 for (let i=1;i<=9;i++){const img=new Image();img.src=sprite(i)}
-const robot=$('#robot'), phase=$('#phase'), reply=$('#reply');
+const robot=$('#robot'), blink=$('#blink'), phase=$('#phase'), reply=$('#reply');
 let session=null,micStream=null,micCtx=null,processor=null,source=null,outCtx=null,voiceAnalyser=null,voiceFxOsc=null;
 let active=false,muted=false,audioSources=new Set(),nextPlay=0,animFrame=0;
-let playbackTimer=0,sessionGeneration=0;
+let position=5,turnTimer=0,blinkTimer=0,playbackTimer=0,sessionGeneration=0;
+let turnGeneration=0,turning=false,blinkGeneration=0,voiceActiveUntil=0;
 let inputText='',outputText='';
+
+// Android / navegadores compatibles: mantener la pantalla encendida durante la sesión.
+// Si el sistema revoca Wake Lock (p. ej. al cambiar de app), se intenta recuperar al volver.
+let screenWakeLock=null;
+async function acquireWakeLock(){
+ if(!('wakeLock' in navigator)||!document.visibilityState||document.visibilityState!=='visible')return;
+ try{
+  if(screenWakeLock)return;
+  const lock=await navigator.wakeLock.request('screen');
+  if(!active && !connecting){await lock.release();return}
+  screenWakeLock=lock;
+  lock.addEventListener('release',()=>{if(screenWakeLock===lock)screenWakeLock=null},{once:true});
+ }catch(e){console.info('[JOTAPE] Android no concedió Wake Lock:',e?.message||e)}
+}
+async function releaseWakeLock(){const lock=screenWakeLock;screenWakeLock=null;try{await lock?.release()}catch{}}
+let connecting=false;
+document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible' && active)acquireWakeLock()});
+// Fullscreen es una mejora progresiva: la web sigue funcionando si Android lo rechaza.
+function enterImmersiveFullscreen(){
+ try{
+  if(!document.fullscreenElement && document.documentElement.requestFullscreen){
+   const promise=document.documentElement.requestFullscreen({navigationUI:'hide'});
+   promise?.catch(()=>{});
+  }
+ }catch{}
+}
+async function exitImmersiveFullscreen(){try{if(document.fullscreenElement)await document.exitFullscreen()}catch{}}
+
 let robotDry=null,robotWet=null,robotModGain=null,robotModDepth=null,robotEcho=null;
 const robotIntensity=0.92; // Efecto fijo: no se muestra ningún control al visitante
 function updateRobotIntensity(value){
@@ -36,23 +65,61 @@ function clearError(){$('#err').textContent=''}
 function setMouth(v){document.documentElement.style.setProperty('--mouth',Math.max(0,Math.min(1,v)).toFixed(3))}
 const pause=ms=>new Promise(r=>setTimeout(r,ms));
 
-// Rotación visual autónoma: funciona desde que se abre la web,
-// antes, durante y después de la sesión. Los ojos nunca parpadean.
-// La trayectoria recorre los nueve sprites y vuelve sin saltos bruscos.
-const rotationFrames=[5,6,7,8,9,8,7,6,5,4,3,2,1,2,3,4];
-const rotationIntervalMs=340; // Aumentar para girar más despacio.
-let rotationIndex=0;
-function animateHead(){
- // Durante la reproducción de voz se mantiene la vista frontal.
- if(audioSources.size>0){
-  robot.src=sprite(5);
-  return;
+// Giro por sprites: una única secuencia, pausada y cancelable.
+// Evita que dos giros se solapen al interrumpirse una sesión o al comenzar a hablar.
+const frameDelay=ms=>new Promise(resolve=>setTimeout(resolve,ms));
+const canTurn=()=>active && !muted && !turning &&
+  performance.now()>voiceActiveUntil && audioSources.size===0;
+function showFrame(n){position=n;robot.src=sprite(n)}
+async function turn(to){
+ if(!canTurn())return;
+ const generation=++turnGeneration;turning=true;
+ try{
+  const path=[];
+  let n=5;
+  while(n!==to){n+=to>n?1:-1;path.push(n)}
+  for(const frame of path){
+   if(!active||generation!==turnGeneration||audioSources.size)return;
+   showFrame(frame);await frameDelay(260);
+  }
+  await frameDelay(650);
+  for(const frame of [...path].reverse().slice(1).concat(5)){
+   if(!active||generation!==turnGeneration||audioSources.size)return;
+   showFrame(frame);await frameDelay(260);
+  }
+ }finally{
+  // Regreso al frente incluso cuando Gemini interrumpe la animación.
+  if(generation===turnGeneration){showFrame(5);turning=false}
  }
- rotationIndex=(rotationIndex+1)%rotationFrames.length;
- robot.src=sprite(rotationFrames[rotationIndex]);
 }
-robot.src=sprite(rotationFrames[0]);
-setInterval(animateHead,rotationIntervalMs);
+function cancelTurn(){turnGeneration++;turning=false;showFrame(5)}
+function scheduleTurn(){
+ clearTimeout(turnTimer);
+ if(!active)return;
+ turnTimer=setTimeout(async()=>{
+  if(canTurn())await turn(Math.random()>.5?3:7); // +/-20°, giro de observación
+  if(active)scheduleTurn();
+ },12500+Math.random()*9500);
+}
+function scheduleBlink(){
+ clearTimeout(blinkTimer);
+ if(!active)return;
+ const generation=blinkGeneration;
+ blinkTimer=setTimeout(async()=>{
+  if(active&&generation===blinkGeneration&&!turning&&position===5){
+   blink.src='/sprites/jotape_blink_dim.png';blink.style.opacity='.35';
+   await frameDelay(90);
+   if(!active||generation!==blinkGeneration)return;
+   blink.src='/sprites/jotape_blink_off.png';blink.style.opacity='1';
+   await frameDelay(65);
+   if(!active||generation!==blinkGeneration)return;
+   blink.src='/sprites/jotape_blink_dim.png';blink.style.opacity='.35';
+   await frameDelay(100);
+   blink.style.opacity='0';
+  }
+  if(active&&generation===blinkGeneration)scheduleBlink();
+ },3400+Math.random()*4200);
+}
 
 function b64ToBytes(base64){const binary=atob(base64);const arr=new Uint8Array(binary.length);for(let i=0;i<binary.length;i++)arr[i]=binary.charCodeAt(i);return arr}
 function bytesToB64(bytes){let s='';for(let i=0;i<bytes.length;i++)s+=String.fromCharCode(bytes[i]);return btoa(s)}
@@ -116,12 +183,7 @@ function playPCM(base64){
  for(let i=0;i<len;i++)dst[i]=view.getInt16(i*2,true)/32768;
  const src=outCtx.createBufferSource();src.buffer=buffer;src.connect(voiceAnalyser);
  const start=Math.max(outCtx.currentTime+.02,nextPlay);nextPlay=start+buffer.duration;
- src.onended=()=>{audioSources.delete(src);};
- audioSources.add(src);
- // Apenas llega audio, la cabeza mira al frente hasta que termina de hablar.
- robot.src=sprite(5);
- rotationIndex=0;
- src.start(start);
+ src.onended=()=>audioSources.delete(src);audioSources.add(src);voiceActiveUntil=performance.now()+Math.max(1400,(nextPlay-outCtx.currentTime)*1000+250);if(turning)cancelTurn();src.start(start);
  message('JOTAPE ESTÁ HABLANDO...');
 }
 function trackVoice(){if(!active||!voiceAnalyser)return;const f=new Uint8Array(voiceAnalyser.frequencyBinCount);voiceAnalyser.getByteTimeDomainData(f);let power=0;for(const v of f){const d=(v-128)/128;power+=d*d}const rms=Math.sqrt(power/f.length);setMouth(Math.max(0,(rms-.009)*6));animFrame=requestAnimationFrame(trackVoice)}
@@ -134,7 +196,9 @@ function onModelMessage(msg){
  if(content.turnComplete){const final=outputText.trim();if(final)reply.textContent='> '+final.slice(-320);outputText='';inputText='';playbackTimer=setTimeout(()=>{if(active&&(!outCtx||outCtx.currentTime>=nextPlay-.04))message('TE ESCUCHO...')},250)}
 }
 async function connect(){
- if(active)return;clearError();message('INICIANDO CONEXIÓN...');$('#connect').disabled=true;
+ if(active||connecting)return;connecting=true;clearError();message('INICIANDO CONEXIÓN...');$('#connect').disabled=true;
+ // Ambas solicitudes se originan en el toque del usuario, antes de pedir el token.
+ enterImmersiveFullscreen();acquireWakeLock();
  const myGeneration=++sessionGeneration;
  try{
   if(!navigator.mediaDevices?.getUserMedia)throw Error('El micrófono necesita HTTPS o localhost y un navegador compatible.');
@@ -154,13 +218,16 @@ async function connect(){
   if(myGeneration!==sessionGeneration){live.close();return}
   session=live;active=true;await startMicrophone();
   document.body.classList.add('connected');$('#desktop-connection').textContent='EN LÍNEA';$('#connection').textContent='EN LÍNEA';$('#connect').hidden=true;$('#disconnect').hidden=false;$('#mute').hidden=false;$('#textrow').hidden=false;
-  message('TE ESCUCHO...');trackVoice();
- }catch(e){error(e?.message||'Error de inicio');await disconnect();message('NO SE PUDO CONECTAR. REVISÁ LA CONFIGURACIÓN.')}finally{$('#connect').disabled=false}
+  message('TE ESCUCHO...');scheduleBlink();scheduleTurn();trackVoice();acquireWakeLock();
+ }catch(e){error(e?.message||'Error de inicio');await disconnect();message('NO SE PUDO CONECTAR. REVISÁ LA CONFIGURACIÓN.')}finally{connecting=false;$('#connect').disabled=false;if(!active){releaseWakeLock();exitImmersiveFullscreen()}}
 }
-async function disconnect(){sessionGeneration++;active=false;clearTimeout(playbackTimer);cancelAnimationFrame(animFrame);stopPlayback();await stopMicrophone();try{session?.close()}catch{}session=null;if(voiceFxOsc){try{voiceFxOsc.stop();voiceFxOsc.disconnect()}catch{}voiceFxOsc=null}if(outCtx){await outCtx.close().catch(()=>{});outCtx=null}voiceAnalyser=null;robotDry=robotWet=robotModGain=robotModDepth=robotEcho=null;muted=false;document.body.classList.remove('connected');$('#desktop-connection').textContent='LISTO PARA CONECTAR';$('#connection').textContent='LISTO PARA CONECTAR';$('#connect').hidden=false;$('#disconnect').hidden=true;$('#mute').hidden=true;$('#textrow').hidden=true;$('#mute').textContent='MICRÓFONO: ACTIVADO';}
+async function disconnect(){sessionGeneration++;active=false;await releaseWakeLock();await exitImmersiveFullscreen();clearTimeout(turnTimer);clearTimeout(blinkTimer);blinkGeneration++;cancelTurn();blink.style.opacity='0';clearTimeout(playbackTimer);cancelAnimationFrame(animFrame);stopPlayback();await stopMicrophone();try{session?.close()}catch{}session=null;if(voiceFxOsc){try{voiceFxOsc.stop();voiceFxOsc.disconnect()}catch{}voiceFxOsc=null}if(outCtx){await outCtx.close().catch(()=>{});outCtx=null}voiceAnalyser=null;robotDry=robotWet=robotModGain=robotModDepth=robotEcho=null;muted=false;position=5;robot.src=sprite(5);blink.style.opacity=0;document.body.classList.remove('connected');$('#desktop-connection').textContent='LISTO PARA CONECTAR';$('#connection').textContent='LISTO PARA CONECTAR';$('#connect').hidden=false;$('#disconnect').hidden=true;$('#mute').hidden=true;$('#textrow').hidden=true;$('#mute').textContent='MICRÓFONO: ACTIVADO';}
 $('#connect').onclick=connect;$('#disconnect').onclick=async()=>{await disconnect();message('ACERCATE AL TERMINAL. TENEMOS QUE HABLAR.');reply.textContent='> SOY JOTAPE. ¿CÓMO ANDAMOS?';clearError()};
 $('#mute').onclick=()=>{muted=!muted;$('#mute').textContent=muted?'MICRÓFONO: SILENCIADO':'MICRÓFONO: ACTIVADO';if(muted){try{session?.sendRealtimeInput({audioStreamEnd:true})}catch{}}};
 $('#send').onclick=()=>{const text=$('#text').value.trim();if(!text||!session)return;$('#text').value='';reply.textContent='> '+text;session.sendClientContent({turns:[{role:'user',parts:[{text}]}],turnComplete:true})};
 $('#text').addEventListener('keydown',e=>{if(e.key==='Enter')$('#send').click()});
 (async()=>{try{const r=await fetch('/api/status');const s=await r.json();$('#connection').textContent=s.configured?'LISTO PARA CONECTAR':'CONFIGURACIÓN INCOMPLETA';$('#desktop-connection').textContent=$('#connection').textContent}catch{$('#connection').textContent='SERVIDOR NO DISPONIBLE';$('#desktop-connection').textContent='SERVIDOR NO DISPONIBLE'}})();
-window.addEventListener('beforeunload',()=>{try{session?.close()}catch{}});
+window.addEventListener('beforeunload',()=>{try{session?.close()}catch{};releaseWakeLock()});
+
+// Instalación como app Android: los audios de Gemini siempre necesitan red y sesión activa.
+if ('serviceWorker' in navigator) window.addEventListener('load',()=>navigator.serviceWorker.register('/sw.js').catch(err=>console.warn('[JOTAPE] No se pudo registrar caché visual',err)));
