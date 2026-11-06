@@ -17,5 +17,71 @@
 #mouthglow{left:30%;top:63%;width:40%;height:15%;background:radial-gradient(ellipse,#a1ffcb 0%,#3dff9e8a 38%,transparent 75%);filter:blur(9px)}
 @media(max-width:650px){.stage{max-width:min(86vw,43svh,380px)}}
 
-/* JOTAPE: la rotación se controla en main.js; sin superposición de parpadeo. */
-#blink{display:none!important}
+/* Galaxy A26 / Android standalone: respetar área de navegación y cámara */
+@media(max-width:650px){
+ body{overscroll-behavior-y:contain;}
+ .console{padding-top:max(7px,env(safe-area-inset-top));padding-bottom:max(8px,env(safe-area-inset-bottom));}
+ button{touch-action:manipulation;}
+}
+
+
+/* JOTAPE 1.1 · MODO CONVERSACIÓN INMERSIVO
+   Mantiene intacta la terminal retro mientras no hay sesión activa. */
+body.connected{background:#000!important;padding:0!important;overflow:hidden;overscroll-behavior:none}
+body.connected::after{display:none}
+body.connected .console{
+ position:fixed;inset:0;width:100%;max-width:none;height:100dvh;min-height:0;
+ margin:0;padding:0;border:0;border-radius:0;box-shadow:none;background:#000;overflow:hidden;
+}
+body.connected .console::before{display:none}
+body.connected .console-body{display:block;position:absolute;inset:0;min-height:0}
+body.connected .side{display:none!important}
+body.connected .screen-housing{height:100%;width:100%;min-height:0;padding:0;border:0;border-radius:0;box-shadow:none;background:#000}
+body.connected .screen{
+ position:relative;width:100%;height:100%;min-height:0;padding:0;border:0;border-radius:0;
+ background:#000;box-shadow:none;display:flex;justify-content:center;align-items:center;overflow:hidden;
+}
+body.connected .screen::after{display:none}
+body.connected .screen-header,body.connected .mobile-eq,body.connected .speech{display:none!important}
+body.connected .stage{
+ position:absolute;left:50%;top:47%;transform:translate(-50%,-50%);
+ margin:0;flex:none;width:min(86vw,68dvh,720px);height:auto;max-width:none;max-height:none;aspect-ratio:1;
+}
+body.connected .phase{
+ position:absolute;bottom:calc(91px + env(safe-area-inset-bottom));left:12px;right:12px;
+ margin:0;text-align:center;font-size:clamp(10px,2.3vw,14px);letter-spacing:.12em;
+ font-weight:normal;color:#85cba5;text-shadow:0 0 7px #176f4e;
+}
+body.connected .console-controls{
+ position:absolute;z-index:30;bottom:max(20px,env(safe-area-inset-bottom));left:0;right:0;
+ margin:0;padding:0;display:flex;justify-content:center;pointer-events:none;
+}
+body.connected .bottom-plate,body.connected .knob,body.connected .helper,
+body.connected #mute,body.connected #textrow,body.connected #connect{display:none!important}
+body.connected .control-deck{display:block;padding:0}
+body.connected .action-zone{gap:0;pointer-events:none}
+body.connected .actions{display:flex;width:auto;pointer-events:none}
+body.connected #disconnect{
+ pointer-events:auto;display:block!important;min-height:40px;width:auto;
+ padding:10px 19px;border:1px solid #46775e;border-radius:4px;
+ background:#06140f;color:#abd5b9;box-shadow:none;text-shadow:none;
+ font-family:'Courier New',monospace;letter-spacing:.11em;
+ font-size:11px!important;opacity:.8;
+}
+body.connected #disconnect:focus-visible{outline:2px solid #85ffc5;outline-offset:4px}
+body.connected #err:not(:empty){
+ pointer-events:auto;position:fixed;left:5%;right:5%;bottom:80px;z-index:40;
+ padding:10px;background:#30120e;border:1px solid #ff8d70;border-radius:5px;
+}
+@media(max-width:650px){
+ body.connected .console{padding:0!important;min-height:0!important}
+ body.connected .screen{min-height:0!important}
+ body.connected .screen-housing{min-height:0!important}
+ body.connected .stage{width:min(94vw,62dvh);top:46%}
+ body.connected .phase{bottom:calc(90px + env(safe-area-inset-bottom))}
+}
+@media(max-height:500px) and (orientation:landscape){
+ body.connected .stage{width:min(62vh,60vw);top:50%}
+ body.connected .phase{bottom:62px;right:14px;left:auto}
+ body.connected .console-controls{bottom:10px}
+}
