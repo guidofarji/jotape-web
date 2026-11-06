@@ -1,0 +1,1 @@
+Reemplazá index.html y src/style.css con estos archivos, y colocá manifest.webmanifest en public/. No se modificó main.js. El indicador de gestos de Samsung puede seguir visible porque Android lo controla. La insignia de Netlify no aparece en estos archivos: si persiste, revisá el panel de Netlify o la capa de vista previa. Volvé a instalar el acceso directo tras publicar.
