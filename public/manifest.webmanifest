@@ -1,0 +1,33 @@
+{
+  "id": "/",
+  "name": "JOTAPE — Terminal conversacional",
+  "short_name": "JOTAPE",
+  "description": "Robot conversacional con Gemini Live y estética arcade pixel art.",
+  "start_url": "/?source=android",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#060d0c",
+  "theme_color": "#060d0c",
+  "lang": "es-AR",
+  "icons": [
+    {
+      "src": "/icons/jotape-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/jotape-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/jotape-maskable-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ]
+}

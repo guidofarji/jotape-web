@@ -1,33 +1,40 @@
-# JOTAPE WEB 5.1 — Netlify + Gemini Live
+# JOTAPE WEB 5.3 — Pixel Art (Netlify)
 
-Proyecto de publicación permanente de JOTAPE: CRT, nueve sprites de giro, flotación, parpadeos y procesamiento robótico de voz. El navegador habla directamente con Gemini Live mediante un **token efímero** que obtiene de una Netlify Function. No necesita tener tu Mac prendida.
+Versión responsive de la obra artística JOTAPE. Mantiene Gemini Live, voz con efecto robótico, la interfaz arcade ochentosa, el servidor de tokens temporales y los controles existentes. **No usa Ollama ni Whisper.**
 
-## Opción recomendada: publicación desde GitHub (sin terminal después de subir el repositorio)
+## Cambios
 
-1. Descomprimí el ZIP y subí la **carpeta completa** a un repositorio privado de GitHub (NO incluyas ninguna API Key ni archivo `.env`).
-2. En Netlify elegí **Import a Git repository → GitHub** y seleccioná el repo.
-3. Netlify detectará `netlify.toml`: build `npm run build`, carpeta `dist`, funciones `netlify/functions`.
-4. Dentro de Netlify, **Project configuration → Environment variables**, creá `GEMINI_API_KEY` con tu clave de Google AI Studio. Marcá alcance **Functions** o **All**.
-5. Opcional: `JOTAPE_ACCESS_CODE` para restringir pruebas a invitados, y `GEMINI_LIVE_MODEL` para seleccionar modelo.
-6. Hacé **Trigger deploy → Deploy site** luego de configurar las variables. No pegues la clave en el código ni la compartas.
-7. Abrí el dominio `*.netlify.app` con Chrome o Safari, habilitá el micrófono e iniciá conexión.
+- Nuevo rostro pixel-art 8 bits: cabeza turquesa, sin chapa en la frente y ojos verde oscuro.
+- 9 archivos PNG de giro, generados a partir de la hoja aprobada, con fondo transparente. Los extremos se repiten para evitar cortes de silueta en la plancha original; los movimientos automáticos usan el tramo central (vistas 3 a 7).
+- Tres sprites de expresión para parpadeo (`jotape_blink_open/dim/off.png`).
+- Flotación, giro lateral, boca reactiva a la voz y parpadeo automático.
+- Layout adaptable: consola horizontal para escritorio/tablet, vertical para teléfono.
 
-## Opción rápida con Terminal (sin GitHub)
+## Actualizar el proyecto publicado
 
-`npm install`
-`npx netlify login`
-`npx netlify deploy --build --prod`
+Tu repositorio GitHub `jotape-web` está vinculado a Netlify. **No crees otro proyecto ni cambies `GEMINI_API_KEY`.**
 
-La primera vez asociá/creá un sitio. Configurá `GEMINI_API_KEY` en el panel de Netlify y volvé a desplegar. **Para publicar junto con las funciones, usá este método o Git**; NO subas únicamente `index.html` o el ZIP del prototipo anterior al recuadro de archivos estáticos.
+Reemplazá o añadí estos archivos respetando su ubicación:
 
-## Comprobación
+- `index.html`
+- `src/main.js`
+- `src/style.css`
+- `package.json`
+- `public/sprites/` (los doce archivos PNG; subirlos dentro de la carpeta `sprites` de `public`)
 
-`https://TU-SITIO.netlify.app/api/status` debe mostrar `online:true` y `configured:true`. Solo confirma la configuración, no que la conversación Live funcione.
+Los archivos `netlify.toml` y `netlify/functions/` ya son compatibles: mantenerlos. Tras confirmar los cambios con `Commit changes`, Netlify vuelve a publicar automáticamente.
 
-## Advertencias
+Si GitHub no reemplaza archivos cuando los arrastrás, entrá a cada archivo y usá el editor o GitHub Desktop para sincronizar la carpeta completa.
 
-- El nivel gratuito de Gemini tiene cuotas; una web pública sin limitación de sesiones puede agotar la cuota.
-- El código compartido no es seguridad fuerte ni protege contra abuso deliberado. Para apertura pública real se necesita autenticación y rate limiting robusto, y quizás Turnstile.
-- Gemini Live usa internet y permiso de micrófono con HTTPS; algunos dispositivos pueden necesitar un gesto inicial para activar el audio.
-- El modelo de Live puede cambiar de nombre/disponibilidad: configurá `GEMINI_LIVE_MODEL` según tu cuenta.
-- Esta migración se verificó estáticamente, pero no se probaron llamadas reales a Gemini ni el deploy dentro de tu cuenta.
+## Configuración
+
+`GEMINI_API_KEY` debe seguir configurada como **variable secreta de producción** en Netlify, no en el código ni en GitHub. Consultá `netlify/functions/token.mjs` antes de compartir públicamente: las sesiones abiertas pueden consumir cuota de Gemini.
+
+## Desarrollo local (opcional)
+
+```bash
+npm install
+npm run build
+```
+
+El resultado es `dist/`, publicado automáticamente por Netlify. La apariencia de sprites se puede ver sin conexión, pero hablar con Gemini requiere internet, clave y cuota.

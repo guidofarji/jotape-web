@@ -17,5 +17,9 @@
 #mouthglow{left:30%;top:63%;width:40%;height:15%;background:radial-gradient(ellipse,#a1ffcb 0%,#3dff9e8a 38%,transparent 75%);filter:blur(9px)}
 @media(max-width:650px){.stage{max-width:min(86vw,43svh,380px)}}
 
-/* JOTAPE: la rotación se controla en main.js; sin superposición de parpadeo. */
-#blink{display:none!important}
+/* Galaxy A26 / Android standalone: respetar área de navegación y cámara */
+@media(max-width:650px){
+ body{overscroll-behavior-y:contain;}
+ .console{padding-top:max(7px,env(safe-area-inset-top));padding-bottom:max(8px,env(safe-area-inset-bottom));}
+ button{touch-action:manipulation;}
+}
